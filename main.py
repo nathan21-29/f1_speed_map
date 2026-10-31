@@ -75,7 +75,7 @@ if lap is not None:
     ax.autoscale()
     fig.colorbar(points, ax=ax, label="Speed (km/h)")
         
-    ax.scatter(xy[0][0], xy[0][1], color="green", zorder=10) #plot start/finish line
+    ax.scatter(xy[0][0], xy[0][1], color="cyan", zorder=10) #plot start/finish line
     ax.text(xy[0][0] + 100, xy[0][1], "Start/Finish Line")
     plt.gca().set_axis_off()
     
@@ -95,9 +95,14 @@ if lap is not None:
             dt = float((elapsed_time - times[reference]) / (times[comparison] - times[reference])) #gives the progress of the current segment, should be 0 -> 1
             dx = (xy[comparison][0] - xy[reference][0]) * dt
             dy = (xy[comparison][1] - xy[reference][1]) * dt
+            dv = (speeds[comparison] - speeds[reference]) * dt
         dot.set_data([xy[reference][0] + dx], [xy[reference][1] + dy])
-        speed_label.set_text(f"{speeds[reference]}km/h")
-        speed_label.set_position((xy[reference][0] + dx, xy[reference][1] + dy))
+        if(braking[reference]):
+           dot.set_color("red") 
+        else:
+            dot.set_color("green")
+        speed_label.set_text(f"{round(speeds[comparison] + dv, 1)}km/h") #type: ignore
+        speed_label.set_position((xy[reference][0] + dx + 100, xy[reference][1] + dy))
         return dot, speed_label
         
     animation = FuncAnimation(
