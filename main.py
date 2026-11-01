@@ -32,15 +32,29 @@ while True:
         else:
             break
     
-    if year >- 2018 and year <= get_current_season():
+    if year >= 2018 and year <= get_current_season():
         break
+    else:
+        print(f"Please enter a valid integer from 2018 to {get_current_season()}!")
 
 #get round input
 print(f"Quali sessions in {year}")
-get_sessions(year) #print the sessions
-print("Please input the round number of the desired session: ")
+season_length = int(get_sessions(year)) #print the sessions
+while True:
+    while True:
+        try:
+            round_number = int(input("Please input the round number of the desired session: "))
+        except TypeError:
+            print(f"Please enter a valid integer from 1 to {season_length}!")
+        else:
+            break
+        
+    if round_number >= 1 and round_number <= season_length:
+        break
+    else:
+        print(f"Please enter a valid integer from 1 to {season_length}!")
 
-session = fastf1.get_session(2025, "random", "Q")
+session = fastf1.get_session(year, round_number, "Q")
 session.load()
 
 #I want to see verstappen's pole lap!!!

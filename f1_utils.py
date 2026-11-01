@@ -9,7 +9,7 @@ def get_current_season():
     schedule = fastf1.get_event_schedule(curr_year, include_testing=False)
     season_start = pd.to_datetime(schedule["Session1DateUtc"], utc=True)
     
-    if(season_start > now).any(): #season hasn't started yet
+    if(season_start > now).all(): #season hasn't started yet
         return (curr_year - 1)
     else:
         return curr_year
@@ -20,7 +20,11 @@ def get_sessions(year: int):
     schedule = fastf1.get_event_schedule(year, include_testing=False)
     quali_sessions = pd.to_datetime(schedule["Session4DateUtc"], utc=True)
     occurred = schedule.loc[quali_sessions <= now]
-    print(occurred[["RoundNumber", "EventName"]])
+    print("Round Number\tEvent Name")
+    print(occurred[["RoundNumber", "EventName"]].to_string(index=False, header=False))
+    print(len(occurred[["RoundNumber"]]))
+    
+    return len(occurred[["RoundNumber"]])
     
 
 def floor_in_sorted(arr, target):
