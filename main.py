@@ -9,27 +9,38 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import Normalize
 from matplotlib.animation import FuncAnimation
 from datetime import datetime
-
-def floor_in_sorted(arr, target):
-    left, right = 0, len(arr) - 1
-    answer = None
-
-    while left <= right:
-        mid = (left + right) // 2
-
-        if arr[mid] < target:
-            answer = mid
-            left = mid + 1      # look for a larger value still below target
-        else:
-            right = mid - 1
-
-    return answer
+from f1_utils import get_current_season, get_sessions, floor_in_sorted
 
 #cache data instead of downloading it every time
 Path("cache").mkdir(exist_ok=True)
 fastf1.Cache.enable_cache("cache") #param is relative path to cache folder
 
-session = fastf1.get_session(2025, "Suzuka", "Q")
+#select session
+print("###################")
+print("# F1 Quali Viewer #")
+print("###################\n")
+
+year = -1
+track = str()
+#get year input
+while True:
+    while True:
+        try:
+            year = int(input(f"Enter a season (2018 - {get_current_season()}): "))
+        except TypeError:
+            print(f"Please enter a valid integer from 2018 to {get_current_season()}!")
+        else:
+            break
+    
+    if year >- 2018 and year <= get_current_season():
+        break
+
+#get round input
+print(f"Quali sessions in {year}")
+get_sessions(year) #print the sessions
+print("Please input the round number of the desired session: ")
+
+session = fastf1.get_session(2025, "random", "Q")
 session.load()
 
 #I want to see verstappen's pole lap!!!
