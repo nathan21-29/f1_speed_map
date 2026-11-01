@@ -72,9 +72,13 @@ while(True):
     n2 = random.randint(n1 + 1, 9)
     #add one at the end because indexing is from zero but numbering is from one
     print(f"(e.g. to see {drivers["Name"].iloc[n1]} vs {drivers["Name"].iloc[n2]} then enter \"{n1 + 1} {n2 + 1}\")")
-    for n in sorted([int(n) for n in re.findall(r"\d+", input())]): #for every number in the input
+    for n in sorted({int(n) for n in re.findall(r"\d+", input())}): #for every number in the input
         if(n > 0 and n <= 10):
             curr_lap = session.laps.pick_drivers(drivers["Name"].iloc[n - 1]).pick_fastest() #add the lap
+            if curr_lap is None:
+                print(f"No valid lap was found for {drivers["Name"].iloc[n - 1]}")
+                continue
+            
             laps.append(curr_lap)
             load_lap_data(lap_data, curr_lap)
         else:

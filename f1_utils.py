@@ -65,15 +65,15 @@ def load_lap_data(lap_data, lap):
         telemetry = lap.get_telemetry()
         data = {
             "xy": telemetry[["X", "Y"]].to_numpy(),
-            "speeds": telemetry["Speed"].to_numpy()[:-1],
-            "times": telemetry["Time"].tolist()[:-1], #starting time for each segment
+            "speeds": telemetry["Speed"].to_numpy(),
+            "times": telemetry["Time"].tolist(),
             "color": fastf1.plotting.get_team_color(
                 lap["Team"], lap.session
             ),
         }
         
         lap_data.append((lap["Driver"], data,))
-        return
+    return
 
 def draw_cars(lap_data):
     for lap in lap_data:
