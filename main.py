@@ -1,7 +1,7 @@
 import os
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
-import math
+import re
 from pathlib import Path
 import fastf1
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import Normalize
 from matplotlib.animation import FuncAnimation
 from datetime import datetime
-from f1_utils import get_current_season, get_sessions, floor_in_sorted
+from f1_utils import get_current_season, get_sessions, list_drivers, floor_in_sorted
 
 #cache data instead of downloading it every time
 Path("cache").mkdir(exist_ok=True)
@@ -57,18 +57,19 @@ while True:
 session = fastf1.get_session(year, round_number, "Q")
 session.load()
 
+list_drivers(session)
 #I want to see verstappen's pole lap!!!
-lap = session.laps.pick_driver("VER").pick_fastest()
+lap = session.laps.pick_drivers("VER").pick_fastest()
 
 if lap is not None:
-    print("Driver:", lap["Driver"])
-    print("Lap Time:", lap["LapTime"])
+    # print("Driver:", lap["Driver"])
+    # print("Lap Time:", lap["LapTime"])
     #Lets get the data
     telemetry = lap.get_telemetry()
     
     #sample data
-    print(telemetry.columns.tolist())
-    print(telemetry[["Time", "X", "Y", "Speed", "Brake"]].head())
+    # print(telemetry.columns.tolist())
+    # print(telemetry[["Time", "X", "Y", "Speed", "Brake"]].head())
 
     fig, ax = plt.subplots()
     # Color each track segment by its speed.

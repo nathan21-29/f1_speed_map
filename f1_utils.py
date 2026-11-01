@@ -22,9 +22,40 @@ def get_sessions(year: int):
     occurred = schedule.loc[quali_sessions <= now]
     print("Round Number\tEvent Name")
     print(occurred[["RoundNumber", "EventName"]].to_string(index=False, header=False))
-    print(len(occurred[["RoundNumber"]]))
     
     return len(occurred[["RoundNumber"]])
+
+def list_drivers(session):
+    drivers = session.results[["Position", "Abbreviation", "FullName", "TeamName", "Q3"]].copy()
+    drivers = drivers[:10] #only show q3 drivers
+    drivers["Position"] = drivers["Position"].astype("Int64") #cast position to int
+    drivers = drivers.rename(columns={
+        "Position": "Pos",
+        "FullName": "Full Name",
+        "Team Name": "Team Name",
+        "Q3": "Q3 Time"
+    })
+    
+    def format_time(time: pd.Timedelta):
+        if pd.isna(time):
+            return "-"
+        milliseconds = time // pd.Timedelta(milliseconds=1)
+        minutes = milliseconds // 60000
+        milliseconds %= 60000
+        seconds = milliseconds // 1000
+        milliseconds %= 1000
+        return f"{seconds:2}:{milliseconds:03}" if minutes <= 0 else f"{minutes}:{seconds:02}:{milliseconds:03}"
+    
+    pole_time = drivers["Q3 Time"].iloc[0]
+    formatted = [format_time(pole_time)]
+    
+    for time in drivers["Q3 Time"].iloc[1:]:
+        delta = time - pole_time
+        formatted.append("-" if pd.isna(delta) else f"+{format_time(delta)}")
+        
+    drivers["Q3 Time"] = formatted
+    
+    print(drivers.to_string(index=False))
     
 
 def floor_in_sorted(arr, target):
