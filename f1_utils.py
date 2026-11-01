@@ -1,4 +1,5 @@
 import fastf1
+import fastf1.plotting
 import pandas as pd
 from datetime import datetime, timezone
 
@@ -31,6 +32,7 @@ def list_drivers(session):
     drivers["Position"] = drivers["Position"].astype("Int64") #cast position to int
     drivers = drivers.rename(columns={
         "Position": "Pos",
+        "Abbreviation": "Name",
         "FullName": "Full Name",
         "Team Name": "Team Name",
         "Q3": "Q3 Time"
@@ -56,7 +58,27 @@ def list_drivers(session):
     drivers["Q3 Time"] = formatted
     
     print(drivers.to_string(index=False))
-    
+    return drivers
+
+def load_lap_data(lap_data, lap):
+    if lap is not None:
+        telemetry = lap.get_telemetry()
+        data = {
+            "xy": telemetry[["X", "Y"]].to_numpy(),
+            "speeds": telemetry["Speed"].to_numpy()[:-1],
+            "times": telemetry["Time"].tolist()[:-1], #starting time for each segment
+            "color": fastf1.plotting.get_team_color(
+                lap["Team"], lap.session
+            ),
+        }
+        
+        lap_data.append((lap["Driver"], data,))
+        return
+
+def draw_cars(lap_data):
+    for lap in lap_data:
+        telemetry = lap.get_telemetry()
+    return
 
 def floor_in_sorted(arr, target):
     left, right = 0, len(arr) - 1

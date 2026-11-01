@@ -2,14 +2,17 @@ import os
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 import re
+import random
 from pathlib import Path
 import fastf1
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Normalize
 from matplotlib.animation import FuncAnimation
 from datetime import datetime
-from f1_utils import get_current_season, get_sessions, list_drivers, floor_in_sorted
+from time import perf_counter
+from f1_utils import get_current_season, get_sessions, list_drivers, load_lap_data, floor_in_sorted
 
 #cache data instead of downloading it every time
 Path("cache").mkdir(exist_ok=True)
@@ -57,15 +60,38 @@ while True:
 session = fastf1.get_session(year, round_number, "Q")
 session.load()
 
-list_drivers(session)
-#I want to see verstappen's pole lap!!!
-lap = session.laps.pick_drivers("VER").pick_fastest()
+#get driver selection
+drivers = list_drivers(session)
 
-if lap is not None:
+
+laps = list()
+lap_data = list()
+while(True):
+    print("Please enter the positions of the car(s) you would like to see separated by a space.")
+    n1 = random.randint(0, 8)
+    n2 = random.randint(n1 + 1, 9)
+    #add one at the end because indexing is from zero but numbering is from one
+    print(f"(e.g. to see {drivers["Name"].iloc[n1]} vs {drivers["Name"].iloc[n2]} then enter \"{n1 + 1} {n2 + 1}\")")
+    for n in sorted([int(n) for n in re.findall(r"\d+", input())]): #for every number in the input
+        if(n > 0 and n <= 10):
+            curr_lap = session.laps.pick_drivers(drivers["Name"].iloc[n - 1]).pick_fastest() #add the lap
+            laps.append(curr_lap)
+            load_lap_data(lap_data, curr_lap)
+        else:
+            print(f"{n} was not a valid number; lap was not added.")
+    
+    if len(laps) > 0:
+        break
+    
+#lap_data = load_lap_data(laps)
+#I want to see verstappen's pole lap!!!
+reference_lap = laps[0] #use pole lap as reference for heatmap and brake zones
+
+if reference_lap is not None:
     # print("Driver:", lap["Driver"])
     # print("Lap Time:", lap["LapTime"])
     #Lets get the data
-    telemetry = lap.get_telemetry()
+    telemetry = reference_lap.get_telemetry()
     
     #sample data
     # print(telemetry.columns.tolist())
@@ -78,17 +104,17 @@ if lap is not None:
     speeds = telemetry["Speed"].to_numpy()[:-1]
     braking = telemetry["Brake"].to_numpy()[:-1]
     times = telemetry["Time"].tolist()[:-1] #starting time for each segment
-    points = LineCollection(
+    car_path = LineCollection(
         segments,
         cmap="plasma",
         norm=Normalize(vmin=speeds.min(), vmax=speeds.max()),
         linewidth=3,
         zorder=1
     )
-    points.set_array(speeds)
+    car_path.set_array(speeds)
     
     braking_segments = [segments[i] for i in range(len(segments)) if braking[i]]
-    braking_points = LineCollection(
+    braking_zones = LineCollection(
         braking_segments,
         color="cyan",
         alpha=0.3,
@@ -96,10 +122,10 @@ if lap is not None:
         zorder = 2
     )
     
-    ax.add_collection(points)
-    ax.add_collection(braking_points)
+    ax.add_collection(car_path)
+    ax.add_collection(braking_zones)
     ax.autoscale()
-    fig.colorbar(points, ax=ax, label="Speed (km/h)")
+    fig.colorbar(car_path, ax=ax, label="Speed (km/h)")
         
     ax.scatter(xy[0][0], xy[0][1], color="cyan", zorder=10) #plot start/finish line
     ax.text(xy[0][0] + 100, xy[0][1], "Start/Finish Line")
