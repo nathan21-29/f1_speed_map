@@ -13,7 +13,7 @@ from f1_utils import get_current_season, get_sessions, floor_in_sorted
 
 #cache data instead of downloading it every time
 Path("cache").mkdir(exist_ok=True)
-fastf1.Cache.enable_cache("cache") #param is relative path to cache folder
+fastf1.Cache.configure(cache_dir="cache") #param is relative path to cache folder
 
 #select session
 print("###################")
