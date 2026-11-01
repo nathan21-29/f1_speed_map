@@ -63,7 +63,6 @@ session.load()
 #get driver selection
 drivers = list_drivers(session)
 
-
 laps = list()
 lap_data = list()
 while(True):
@@ -129,7 +128,9 @@ if reference_lap is not None:
     ax.add_collection(car_path)
     ax.add_collection(braking_zones)
     ax.autoscale()
-    fig.colorbar(car_path, ax=ax, label="Speed (km/h)", pad=0.5)
+    xmin, xmax = ax.get_xlim()
+    ax.set_xlim(xmin, xmax + (xmin + xmax) * 0.15)
+    fig.colorbar(car_path, ax=ax, label="Speed (km/h)", pad=0.1)
         
     ax.scatter(xy[0][0], xy[0][1], color="cyan", zorder=10) #plot start/finish line
     ax.text(xy[0][0] + 100, xy[0][1], "Start/Finish Line")
@@ -147,10 +148,20 @@ if reference_lap is not None:
             color=data["color"],
             zorder=10,
         )
-        label = ax.text(x + 100, y, driver, zorder=11)
+        label = ax.text(x + 100, y, driver, zorder=11, clip_on=True)
         
         cars.append((driver, data, dot, label))
     
+    #delta data
+    if len(lap_data) == 2: #if 1v1
+        delta_label = ax.text(
+            0.02, 0.98, 
+            f"{lap_data[1][0]} delta to {lap_data[0][0]}: ", 
+            transform=ax.transAxes,
+            va="top",
+            fontsize="large",
+        )
+        
     #duration is the largest 'last-time' point among the cars
     duration = max(data["times"][-1] for _, data in lap_data)
     start_time = perf_counter()
@@ -171,14 +182,44 @@ if reference_lap is not None:
             label.set_text(f"{driver}: {speed:.0f} km/h")
             
             elements.extend([dot, label])
-        
+            
+        if len(lap_data) == 2:
+            #distance covered by pole car
+            distance = np.interp(
+                elapsed, 
+                lap_data[0][1]["times"],
+                lap_data[0][1]["distance"]
+            )
+            #find the diff in times taken for both cars to reach distance
+            ref_time = np.interp(
+                distance,
+                lap_data[0][1]["distance"],
+                lap_data[0][1]["times"]
+            )
+            other_time = np.interp(
+                distance,
+                lap_data[1][1]["distance"],
+                lap_data[1][1]["times"],
+                left = np.nan, right = np.nan #don't allow extrapolation
+            )
+            
+            delta = other_time - ref_time
+            value = f"{delta:+.3f}s" if np.isfinite(delta) else "--"
+            delta_label.set_text(
+                f"{lap_data[1][0]} delta to {lap_data[0][0]}: {value}"
+            )
+            elements.append(delta_label)
+            
         return elements
     
-    animation = FuncAnimation(fig, update, interval=20, blit=True, cache_frame_data=False)
+    animation = FuncAnimation(fig, update, interval=20, blit=False, cache_frame_data=False)
     
+        
     ax.set_aspect("equal", adjustable="box")
     manager = plt.get_current_fig_manager()
     if manager is not None:
         manager.window.state("zoomed") #type: ignore
     fig.patch.set_facecolor("#A0A0A0")
+    #title data
+    plt.title(f"{year} {session.event["EventName"]} - {session.name}")
     plt.show()

@@ -62,22 +62,18 @@ def list_drivers(session):
 
 def load_lap_data(lap_data, lap):
     if lap is not None:
-        telemetry = lap.get_telemetry()
+        telemetry = lap.get_telemetry().add_distance()
         data = {
             "xy": telemetry[["X", "Y"]].to_numpy(),
             "speeds": telemetry["Speed"].to_numpy(),
             "times": telemetry["Time"].dt.total_seconds().to_numpy(),
+            "distance": telemetry["Distance"].to_numpy(),
             "color": fastf1.plotting.get_team_color(
                 lap["Team"], lap.session
             ),
         }
         
         lap_data.append((lap["Driver"], data,))
-    return
-
-def draw_cars(lap_data):
-    for lap in lap_data:
-        telemetry = lap.get_telemetry()
     return
 
 def floor_in_sorted(arr, target):
