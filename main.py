@@ -129,45 +129,52 @@ if reference_lap is not None:
     ax.add_collection(car_path)
     ax.add_collection(braking_zones)
     ax.autoscale()
-    fig.colorbar(car_path, ax=ax, label="Speed (km/h)")
+    fig.colorbar(car_path, ax=ax, label="Speed (km/h)", pad=0.5)
         
     ax.scatter(xy[0][0], xy[0][1], color="cyan", zorder=10) #plot start/finish line
     ax.text(xy[0][0] + 100, xy[0][1], "Start/Finish Line")
     plt.gca().set_axis_off()
     
-    #draw running point
-    start_time = datetime.now()
-    dot, = ax.plot([xy[0][0]], [xy[0][1]], "ro")
-    speed_label = ax.text(xy[0][0], xy[0][1], f"{speeds[0]}")
+    #make a list of all car dot objects
+    cars = list()
+    for driver, data in lap_data:
+        x, y = data["xy"][0]
+        
+        dot, = ax.plot(
+            [x], [y],
+            marker="o",
+            linestyle="None",
+            color=data["color"],
+            zorder=10,
+        )
+        label = ax.text(x + 100, y, driver, zorder=11)
+        
+        cars.append((driver, data, dot, label))
+    
+    #duration is the largest 'last-time' point among the cars
+    duration = max(data["times"][-1] for _, data in lap_data)
+    start_time = perf_counter()
     
     def update(frame):
-        elapsed_time = (datetime.now() - start_time) % times[-1]
-        reference = floor_in_sorted(times, elapsed_time)
-        dt = float()
-        dx = float()
-        dy = float()
-        if reference is not None:
-            comparison = reference + 1 if reference < len(segments) - 1 else 0
-            dt = float((elapsed_time - times[reference]) / (times[comparison] - times[reference])) #gives the progress of the current segment, should be 0 -> 1
-            dx = (xy[comparison][0] - xy[reference][0]) * dt
-            dy = (xy[comparison][1] - xy[reference][1]) * dt
-            dv = (speeds[comparison] - speeds[reference]) * dt
-        dot.set_data([xy[reference][0] + dx], [xy[reference][1] + dy])
-        if(braking[reference]):
-           dot.set_color("red") 
-        else:
-            dot.set_color("green")
-        speed_label.set_text(f"{round(speeds[comparison] + dv, 1)}km/h") #type: ignore
-        speed_label.set_position((xy[reference][0] + dx + 100, xy[reference][1] + dy))
-        return dot, speed_label
+        elapsed = (perf_counter() - start_time) % duration
+        elements = list()
         
-    animation = FuncAnimation(
-        fig,
-        update,
-        frames=len(xy),
-        interval=10,
-        blit=True
-    )
+        for driver, data, dot, label in cars:
+            times = data["times"]
+            
+            x = np.interp(elapsed, times, data["xy"][:, 0])
+            y = np.interp(elapsed, times, data["xy"][:, 1])
+            speed = np.interp(elapsed, times, data["speeds"])
+            
+            dot.set_data([x], [y])
+            label.set_position((x + 100, y))
+            label.set_text(f"{driver}: {speed:.0f} km/h")
+            
+            elements.extend([dot, label])
+        
+        return elements
+    
+    animation = FuncAnimation(fig, update, interval=20, blit=True, cache_frame_data=False)
     
     ax.set_aspect("equal", adjustable="box")
     manager = plt.get_current_fig_manager()

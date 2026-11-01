@@ -66,7 +66,7 @@ def load_lap_data(lap_data, lap):
         data = {
             "xy": telemetry[["X", "Y"]].to_numpy(),
             "speeds": telemetry["Speed"].to_numpy(),
-            "times": telemetry["Time"].tolist(),
+            "times": telemetry["Time"].dt.total_seconds().to_numpy(),
             "color": fastf1.plotting.get_team_color(
                 lap["Team"], lap.session
             ),
