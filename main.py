@@ -30,7 +30,7 @@ while True:
     while True:
         try:
             year = int(input(f"Enter a season (2018 - {get_current_season()}): "))
-        except TypeError:
+        except ValueError:
             print(f"Please enter a valid integer from 2018 to {get_current_season()}!")
         else:
             break
@@ -47,7 +47,7 @@ while True:
     while True:
         try:
             round_number = int(input("Please input the round number of the desired session: "))
-        except TypeError:
+        except ValueError:
             print(f"Please enter a valid integer from 1 to {season_length}!")
         else:
             break
