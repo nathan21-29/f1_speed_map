@@ -12,7 +12,7 @@ Visualize and compare Formula 1 qualifying laps using an animated track map.
 
 ## Setup and usage
 
-Requires Python 3.12 or newer and an internet connection to download session data.
+Requires Python 3.12 or newer, as well as an internet connection / F1 account to access FastF1 data.
 
 ```sh
 python -m pip install -r requirements.txt
