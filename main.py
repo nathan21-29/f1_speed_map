@@ -127,9 +127,17 @@ if reference_lap is not None:
     
     ax.add_collection(car_path)
     ax.add_collection(braking_zones)
-    ax.autoscale()
+    
+    # Fit the view to the reference track and every lap being animated.
+    all_xy = np.vstack([xy, *(data["xy"] for _, data in lap_data)])
+    xmin, ymin = all_xy.min(axis=0)
+    xmax, ymax = all_xy.max(axis=0)
+    # Include room for the driver labels, which are offset 100 units to the right.
+    padding = max((xmax - xmin) * 0.03, (ymax - ymin) * 0.03, 100)
+    ax.set_xlim(xmin - padding, xmax + padding + 500)
+    ax.set_ylim(ymin - padding, ymax + padding)
     xmin, xmax = ax.get_xlim()
-    ax.set_xlim(xmin, xmax + (xmin + xmax) * 0.15)
+    
     fig.colorbar(car_path, ax=ax, label="Speed (km/h)", pad=0.1)
         
     ax.scatter(xy[0][0], xy[0][1], color="cyan", zorder=10) #plot start/finish line
@@ -212,7 +220,7 @@ if reference_lap is not None:
             
         return elements
     
-    animation = FuncAnimation(fig, update, interval=20, blit=False, cache_frame_data=False)
+    animation = FuncAnimation(fig, update, interval=20, blit=True, cache_frame_data=False)
     
         
     ax.set_aspect("equal", adjustable="box")
