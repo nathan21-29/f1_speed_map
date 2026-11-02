@@ -27,3 +27,8 @@ Follow the prompts to select a season (2018 onward), a completed qualifying sess
 - **NumPy** — numerical calculations and interpolation.
 - **pandas** — tabular data and time handling.
 - **Matplotlib** — track plotting and animation.
+
+## Screenshots
+
+<img width="1059" height="1013" alt="image" src="https://github.com/user-attachments/assets/a4e55700-6165-4629-b61a-898ef80adcf4" />
+<img width="1500" height="1462" alt="image" src="https://github.com/user-attachments/assets/ef153f90-e81d-4e64-8857-a61962e007a9" />
